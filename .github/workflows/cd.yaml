@@ -1,0 +1,53 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Use Node.js 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+      - name: Install zx globally
+        shell: bash
+        run: |
+          npm install zx -g
+      - name: Install dependencies
+        run: |
+          cd client
+          npm install
+          cd ../server
+          npm install
+      - name: Build code
+        run: |
+          cd client
+          npm run build
+          cd ../server
+          npm run build
+      - name: Zip code
+        uses: ./.github/actions/zip
+      - name: Upload zip of web files
+        uses: garygrossgarten/github-action-scp@release
+        with:
+          local: zip/ticket-tracker.zip
+          remote: /home/ticket-tracker/ticket-tracker.zip
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+      - name: Deploy to production web
+        uses: appleboy/ssh-action@v0.1.2
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ${{ secrets.SSH_USERNAME }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          script: zx /home/ticket-tracker/deploy.js --quiet
