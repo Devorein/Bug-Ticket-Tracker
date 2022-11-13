@@ -12,7 +12,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import * as React from 'react';
 import useLoginUser from '../../../api/users/useLoginUser';
-import SuccessSnackbar from '../../common/successSnackbar';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -122,10 +121,6 @@ export default function LoginForm() {
             {msgError}
           </Alert>
         )}
-        <SuccessSnackbar
-          successMessage='User logged In!'
-          showSnackbar={showSnackbar}
-        />
       </Box>
     </Container>
   );
